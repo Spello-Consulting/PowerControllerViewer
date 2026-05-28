@@ -81,7 +81,8 @@ def _get_smart_devices(all_states: list[dict]) -> list[dict]:
     for s in all_states:
         if s.get("StateFileType") == "PowerController":
             output = s.get("Output") or {}
-            if output.get("Type") in {"shelly", "smart device"}:
+            hide_from_summary = output.get("HideFromSummary", False) or False  # Issue 14
+            if output.get("Type") in {"shelly", "smart device"} and not hide_from_summary:
                 result.append({
                     "Name": s.get("DeviceName") or "Unknown",
                     "IsOn": bool(output.get("IsOn")),

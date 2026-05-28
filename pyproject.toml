@@ -1,6 +1,6 @@
 [project]
 name = "PowerControllerViewer"
-version = "3.0.0"
+version = "3.0.1"
 description = "View the status of one or more PowerController or LightingControl application instances"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -36,6 +36,7 @@ ignore = [
 remote="~/Library/CloudStorage/Dropbox/Development/dev_setup/app_config/PowerControllerViewer"
 patterns = [
     "config.yaml",
+    ".vscode/*",
     "state_data/*",
     "logs/*",
 ]
