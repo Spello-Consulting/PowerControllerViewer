@@ -40,3 +40,15 @@ def fmt_time(t: dt.datetime | dt.time | None) -> str:
     if t is None:
         return ""
     return t.strftime("%H:%M")
+
+def get_currency_major(state: dict) -> str:
+    """Get the major currency symbol for the current state."""
+    symbol = state.get("MajorCurrencySymbol") or "$"
+    return symbol
+
+def get_currency_minor(state: dict) -> str:
+    """Get the minor currency symbol for the current state."""
+    symbol = state.get("MinorCurrencySymbol") or "¢"
+    return symbol
+
+

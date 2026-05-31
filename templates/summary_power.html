@@ -58,13 +58,13 @@
         <tr>
           <td class="label">Current Price</td>
           <td class="value">
-            <span data-field="current-price">{{ page_data.CurrentPrice }}</span> c/kWh
+            <span data-field="current-price">{{ page_data.CurrentPrice }}</span>
             {% if not page_data.LivePrices %}<span class="card-meta">&nbsp;(no live prices)</span>{% endif %}
           </td>
         </tr>
         <tr>
           <td class="label">Average Energy Price</td>
-          <td class="value">{{ page_data.AverageEnergyPrice }} c/kWh</td>
+          <td class="value">{{ page_data.AverageEnergyPrice }}</td>
         </tr>
         <tr>
           <td class="label">Average Daily Usage</td>
@@ -86,7 +86,7 @@
                   <td>{{ plan.From }}</td>
                   <td>{{ plan.To }}</td>
                   <td>{{ plan.Duration }}</td>
-                  <td>{{ plan.AveragePrice }} c/kWh</td>
+                  <td>{{ plan.AveragePrice }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -96,7 +96,7 @@
         {% endif %}
         <tr>
           <td class="label">Forecast Avg Price</td>
-          <td class="value">{{ page_data.ForecastPrice }} c/kWh</td>
+          <td class="value">{{ page_data.ForecastPrice }}</td>
         </tr>
         {% if page_data.DebugMessage %}
         <tr>

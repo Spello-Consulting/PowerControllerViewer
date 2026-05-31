@@ -3,7 +3,7 @@ import datetime as dt
 
 from sc_foundation import DateHelper
 
-from view_models.common import format_date_with_ordinal, hours_to_string, nav_url
+from view_models.common import format_date_with_ordinal, hours_to_string, nav_url, get_currency_major, get_currency_minor
 
 
 def build_power_view(
@@ -49,7 +49,7 @@ def build_power_view(
                 "From": event["StartDateTime"].strftime("%H:%M") if isinstance(event["StartDateTime"], dt.datetime) else "?",
                 "To": event["EndDateTime"].strftime("%H:%M") if isinstance(event["EndDateTime"], dt.datetime) else "?",
                 "Duration": hours_to_string((event.get("Minutes") or 0) / 60),
-                "AveragePrice": "?" if event.get("Price") is None else f"{round(event['Price'], 1)}",
+                "AveragePrice": "?" if event.get("Price") is None else f"{round(event['Price'], 1)} {get_currency_minor(state)}/kWh",
             })
 
     next_state = all_states[next_idx] if next_idx is not None else None
@@ -78,13 +78,13 @@ def build_power_view(
         "RemainingRuntime": hours_to_string(run_plan.get("RemainingHours") or 0),
         "AverageDailyRuntime": hours_to_string((run_history.get("CurrentTotals") or {}).get("ActualHoursPerDay") or 0),
         "LivePrices": output.get("DeviceMode") == "BestPrice",
-        "CurrentPrice": round((run_history.get("CurrentPrice") or 0), 1),
-        "AverageEnergyPrice": round(avg_price, 1),
+        "CurrentPrice": f"{round((run_history.get("CurrentPrice") or 0), 1)} {get_currency_minor(state)}/kWh",
+        "AverageEnergyPrice": f"{round(avg_price, 1)} {get_currency_minor(state)}/kWh",
         "AverageDailyUsage": round(avg_hourly * 24, 2),
-        "AverageDailyCost": f"${avg_hourly * 24 * avg_price / 100:.2f}",
+        "AverageDailyCost": f"{get_currency_major(state)}{avg_hourly * 24 * avg_price / 100:.2f}",
         "HaveRunPlan": len(run_plan_summary) > 0,
         "RunPlan": run_plan_summary,
-        "ForecastPrice": round(run_plan.get("ForecastAveragePrice") or 0, 1),
+        "ForecastPrice": f"{round(run_plan.get("ForecastAveragePrice") or 0, 1)} {get_currency_minor(state)}/kWh",
         "DebugMessage": debug_message,
     }
 
@@ -105,7 +105,7 @@ def build_power_ws_update(state: dict) -> dict:
         "StatusMessage": output.get("Reason") or "",
         "ActualRuntime": hours_to_string(actual_hours),
         "RemainingRuntime": hours_to_string(run_plan.get("RemainingHours") or 0),
-        "CurrentPrice": round((run_history.get("CurrentPrice") or 0), 1),
+        "CurrentPrice": f"{round((run_history.get("CurrentPrice") or 0), 1)} {get_currency_minor(state)}/kWh",
         "LastCheck": format_date_with_ordinal(state.get("LocalLastSaveTime"), show_time=True),
     }
 
@@ -140,9 +140,9 @@ def build_power_daily_view(
     total_cost = day_data.get("TotalCost") or 0
     energy_str = f"{energy_used:.2f} kWh"
     if avg_price > 0:
-        energy_str += f" at {avg_price:.1f} c/kWh"
+        energy_str += f" at {avg_price:.1f} {get_currency_minor(state)}/kWh"
     if total_cost > 0:
-        energy_str += f" = ${total_cost:.2f}"
+        energy_str += f" = {get_currency_major(state)}{total_cost:.2f}"
 
     device_runs = []
     for run in (day_data.get("DeviceRuns") or []):
@@ -153,7 +153,7 @@ def build_power_daily_view(
             "Start": st.strftime("%H:%M") if isinstance(st, dt.datetime) else "?",
             "End": et.strftime("%H:%M") if isinstance(et, dt.datetime) else "Running",
             "Duration": hours_to_string(run.get("ActualHours") or 0),
-            "Price": "?" if price is None else f"{round(price, 1)} c/kWh",
+            "Price": "?" if price is None else f"{round(price, 1)} {get_currency_minor(state)}/kWh",
         })
 
     return {
