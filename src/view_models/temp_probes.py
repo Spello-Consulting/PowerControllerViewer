@@ -3,7 +3,7 @@ import datetime as dt
 
 from sc_foundation import DateHelper
 
-from view_models.common import format_date_with_ordinal, nav_url
+from view_models.common import format_date_with_ordinal, iso_or_empty, nav_url
 
 
 def build_temp_probes_view(
@@ -36,6 +36,7 @@ def build_temp_probes_view(
         "next_url": nav_url("/summary", key, state_idx=next_idx) if next_idx is not None else None,
         "NextDeviceName": next_state.get("DeviceName") if next_state else None,
         "LastCheck": format_date_with_ordinal(last_save, show_time=True),
+        "LastCheckISO": iso_or_empty(last_save),
         "CurrentTime": DateHelper.now().strftime("%H:%M:%S"),
         "TempProbes": temp_probes,
         "SmartDevices": smart_devices,
@@ -51,6 +52,7 @@ def build_temp_probes_ws_update(state: dict) -> dict:
     probe_data = probe_logging.get("probes") or []
     return {
         "LastCheck": format_date_with_ordinal(state.get("LocalLastSaveTime"), show_time=True),
+        "LastCheckISO": iso_or_empty(state.get("LocalLastSaveTime")),
         "TempProbes": [_build_probe_entry(p) for p in probe_data],
     }
 

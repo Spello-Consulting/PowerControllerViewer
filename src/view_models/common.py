@@ -35,6 +35,15 @@ def format_date_with_ordinal(date: dt.date | dt.datetime | None, show_time: bool
     return result
 
 
+def iso_or_empty(value: dt.datetime | None) -> str:
+    """Return a timezone-aware ISO 8601 string for a datetime, else empty string.
+
+    Used to hand the raw instant to the browser so it can render the timestamp
+    in the *viewer's* local timezone (the datetime carries the server's offset).
+    """
+    return value.isoformat() if isinstance(value, dt.datetime) else ""
+
+
 def fmt_time(t: dt.datetime | dt.time | None) -> str:
     """Return HH:MM string or empty string if None."""
     if t is None:

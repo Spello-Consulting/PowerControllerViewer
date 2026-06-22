@@ -29,7 +29,7 @@
             <div class="card-meta">{{ device.DeviceDescription }}</div>
             {% endif %}
           </td>
-          <td class="desktop-only" data-field="last-check" data-iso="{{ device.LastCheckISO | default('') }}">{{ device.LastCheck }}</td>
+          <td class="desktop-only" data-field="last-check" data-iso="{{ device.LastCheckISO | default('') }}" data-tz="abbr">{{ device.LastCheck }}</td>
           <td>
             <span class="status-indicator {% if device.IsDeviceRunning %}status-indicator--active{% else %}status-indicator--inactive{% endif %}" data-field="indicator"></span>
             <span data-field="status">{{ device.Status }}</span>
@@ -65,7 +65,7 @@
         var row = document.querySelector('tr[data-device-name="' + d.device_name + '"]');
         if (!row) { needsReload = true; return; }
         var chk = row.querySelector('[data-field="last-check"]');
-        if (chk) { chk.textContent = d.last_check; chk.dataset.iso = d.last_check_iso || ''; }
+        if (chk) setLocalDate(chk, d.last_check_iso);
         var ind = row.querySelector('[data-field="indicator"]');
         if (ind) ind.className = 'status-indicator ' + (d.is_running ? 'status-indicator--active' : 'status-indicator--inactive');
         var st = row.querySelector('[data-field="status"]');
@@ -75,14 +75,14 @@
       updateHomeFooter();
     }
 
-    // Set footer to the most recently updated device's LastCheck text
+    // Set footer to the most recently updated device's timestamp (in viewer-local time).
     function updateHomeFooter() {
-      var best = { iso: '', text: '' };
+      var best = '';
       document.querySelectorAll('td[data-field="last-check"]').forEach(function (td) {
-        var iso = td.dataset.iso || '';
-        if (iso > best.iso) { best.iso = iso; best.text = td.textContent; }
+        var iso = td.getAttribute('data-iso') || '';
+        if (iso > best) best = iso;
       });
       var lc = document.getElementById('last-check');
-      if (lc && best.text) lc.textContent = best.text;
+      if (lc && best) setLocalDate(lc, best);
     }
 {% endblock %}

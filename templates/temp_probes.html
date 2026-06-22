@@ -169,7 +169,7 @@
       var s = msg.summary;
       if (!s || !s.TempProbes) return;
       var lc = document.getElementById('last-check');
-      if (lc) lc.textContent = s.LastCheck;
+      if (lc) setLocalDate(lc, s.LastCheckISO);
       s.TempProbes.forEach(function (probe) {
         var cell = document.querySelector('[data-probe-value="' + probe.Name + '"]');
         if (!cell) return;

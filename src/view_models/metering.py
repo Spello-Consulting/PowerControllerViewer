@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from sc_foundation import DateHelper
 
-from view_models.common import format_date_with_ordinal, nav_url, get_currency_major
+from view_models.common import format_date_with_ordinal, iso_or_empty, nav_url, get_currency_major
 
 
 @dataclass
@@ -61,6 +61,7 @@ def build_metering_view(
         "next_url": nav_url("/summary", key, state_idx=next_idx) if next_idx is not None else None,
         "NextDeviceName": next_state.get("DeviceName") if next_state else None,
         "LastCheck": format_date_with_ordinal(last_save, show_time=True),
+        "LastCheckISO": iso_or_empty(last_save),
         "TimeNow": DateHelper.now_str(),
         "FirstDate": first_date.isoformat() if first_date else None,
         "LastDate": last_date.isoformat() if last_date else None,

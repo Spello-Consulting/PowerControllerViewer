@@ -3,7 +3,7 @@ import datetime as dt
 
 from sc_foundation import DateHelper
 
-from view_models.common import format_date_with_ordinal, nav_url
+from view_models.common import format_date_with_ordinal, iso_or_empty, nav_url
 
 _DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -40,6 +40,7 @@ def build_lighting_view(
         "NextDeviceName": (next_state.get("DeviceName")) if next_state else None,
         "daily_url": nav_url("/daily", key, state_idx=state_idx) if switch_events else None,
         "LastCheck": format_date_with_ordinal(last_save, show_time=True),
+        "LastCheckISO": iso_or_empty(last_save),
         "TimeNow": DateHelper.now_str(),
         "LastStatusMessage": state.get("LastStatusMessage") or "",
         "DuskTime": dusk.strftime("%H:%M") if isinstance(dusk, dt.datetime) else None,
@@ -58,6 +59,7 @@ def build_lighting_ws_update(state: dict) -> dict:
     return {
         "LastStatusMessage": state.get("LastStatusMessage") or "",
         "LastCheck": format_date_with_ordinal(state.get("LocalLastSaveTime"), show_time=True),
+        "LastCheckISO": iso_or_empty(state.get("LocalLastSaveTime")),
         # Only include the fields the JS handler reads; raw state may contain
         # datetime.time objects that are not JSON-serialisable.
         "SwitchStates": [

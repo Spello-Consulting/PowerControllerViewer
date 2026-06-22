@@ -14,7 +14,7 @@
   <div class="card-header">
     <div>
       <div class="card-title">{{ page_data.DeviceName }}</div>
-      <div class="card-meta">Last check: <span data-field="last-check">{{ page_data.LastCheck }}</span></div>
+      <div class="card-meta">Last check: <span data-field="last-check" data-iso="{{ page_data.LastCheckISO | default('') }}" data-tz="full">{{ page_data.LastCheck }}</span></div>
     </div>
     <form class="period-form" id="periodForm"
           data-state-idx="{{ page_data.CurrentIndex }}"

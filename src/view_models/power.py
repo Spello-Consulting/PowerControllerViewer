@@ -3,7 +3,7 @@ import datetime as dt
 
 from sc_foundation import DateHelper
 
-from view_models.common import format_date_with_ordinal, hours_to_string, nav_url, get_currency_major, get_currency_minor
+from view_models.common import format_date_with_ordinal, hours_to_string, iso_or_empty, nav_url, get_currency_major, get_currency_minor
 
 
 def build_power_view(
@@ -66,6 +66,7 @@ def build_power_view(
         "NextDeviceName": (next_state.get("Output", {}).get("Name") or next_state.get("DeviceName")) if next_state else None,
         "daily_url": nav_url("/daily", key, state_idx=state_idx),
         "LastCheck": format_date_with_ordinal(last_save, show_time=True),
+        "LastCheckISO": iso_or_empty(last_save),
         "TimeNow": DateHelper.now_str(),
         "IsDeviceRunning": is_on,
         "StatusMessage": output.get("Reason") or "",

@@ -3,7 +3,7 @@ import datetime as dt
 
 from sc_foundation import DateHelper
 
-from view_models.common import format_date_with_ordinal, hours_to_string, nav_url
+from view_models.common import format_date_with_ordinal, hours_to_string, iso_or_empty, nav_url
 
 
 _TYPE_ORDER = ["PowerController", "LightingControl", "TempProbes", "OutputMetering"]
@@ -16,7 +16,8 @@ _TYPE_LABELS = {
 
 
 def build_home_view(all_states: list[dict], key: str | None, refresh_delay: int) -> dict:
-    last_update = format_date_with_ordinal(_latest_save(all_states), show_time=True)
+    latest_save = _latest_save(all_states)
+    last_update = format_date_with_ordinal(latest_save, show_time=True)
     return {
         "home_url": nav_url("/", key),
         "AccessKey": key,
@@ -24,6 +25,7 @@ def build_home_view(all_states: list[dict], key: str | None, refresh_delay: int)
         "TimeNow": DateHelper.now_str(),
         "LastStateUpdate": last_update,
         "LastCheck": last_update,
+        "LastCheckISO": iso_or_empty(latest_save),
         "TotalDevices": len(all_states),
         "DeviceGroups": _group_devices(all_states, key),
     }
@@ -58,7 +60,7 @@ def build_home_device_ws(state: dict) -> dict:
     return {
         "device_name": state.get("DeviceName"),
         "last_check": format_date_with_ordinal(ts, show_time=True),
-        "last_check_iso": ts.isoformat() if isinstance(ts, dt.datetime) else "",
+        "last_check_iso": iso_or_empty(ts),
         "is_running": _is_running(state),
         "status": _status_text(state),
     }
@@ -76,7 +78,7 @@ def _build_device_row(state: dict, key: str | None) -> dict:
         "DeviceDescription": state.get("DeviceDescription", ""),
         "summary_url": nav_url("/summary", key, state_idx=idx),
         "LastCheck": format_date_with_ordinal(ts, show_time=True),
-        "LastCheckISO": ts.isoformat() if isinstance(ts, dt.datetime) else "",
+        "LastCheckISO": iso_or_empty(ts),
         "IsDeviceRunning": _is_running(state),
         "Status": _status_text(state),
     }

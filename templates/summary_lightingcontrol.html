@@ -25,7 +25,7 @@
       <tbody>
         <tr>
           <td class="label">Last Check</td>
-          <td class="value" data-field="last-check">{{ page_data.LastCheck }}</td>
+          <td class="value" data-field="last-check" data-iso="{{ page_data.LastCheckISO | default('') }}" data-tz="full">{{ page_data.LastCheck }}</td>
         </tr>
         {% if page_data.DuskTime %}
         <tr>
@@ -157,9 +157,9 @@
       var sm = document.querySelector('[data-field="status-message"]');
       if (sm) sm.textContent = s.LastStatusMessage;
       var lc = document.getElementById('last-check');
-      if (lc) lc.textContent = s.LastCheck;
+      if (lc) setLocalDate(lc, s.LastCheckISO);
       var chk = document.querySelector('[data-field="last-check"]');
-      if (chk) chk.textContent = s.LastCheck;
+      if (chk) setLocalDate(chk, s.LastCheckISO);
       if (s.SwitchStates) {
         s.SwitchStates.forEach(function (sw) {
           var row = document.querySelector('tr[data-switch="' + sw.Switch + '"]');

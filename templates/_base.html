@@ -17,9 +17,77 @@
 
 {% block body %}{% endblock %}
 
-<p id="page-footer">Last update: <span id="last-check">{{ page_data.LastCheck }}</span>{% block footer_extra %}{% endblock %}</p>
+<p id="page-footer">Last update: <span id="last-check" data-iso="{{ page_data.LastCheckISO | default('') }}" data-tz="full">{{ page_data.LastCheck }}</span>{% block footer_extra %}{% endblock %}</p>
 
 <script>
+  // ── Timezone-aware timestamp rendering ──────────────────────────────────────
+  // The server emits "last update" timestamps as ISO 8601 strings carrying the
+  // server's UTC offset. We re-render them in the *viewer's* local timezone so the
+  // page is unambiguous when viewed from another location. Elements opt in with a
+  // data-iso attribute; data-tz controls the suffix ('full' = IANA name like
+  // "Europe/Rome", 'abbr' = short name like "CEST"/"GMT+2").
+  var CLIENT_TZ = '';
+  try { CLIENT_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) { CLIENT_TZ = ''; }
+
+  var _DT_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+
+  function _dtOrdinal(n) {
+    if (n >= 11 && n <= 13) return 'th';
+    switch (n % 10) { case 1: return 'st'; case 2: return 'nd'; case 3: return 'rd'; default: return 'th'; }
+  }
+
+  function _dtPad(n) { return String(n).padStart(2, '0'); }
+
+  // ISO string -> "12th June 17:09:21" in the browser's local timezone.
+  function formatLocalDateTime(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var day = d.getDate();
+    return day + _dtOrdinal(day) + ' ' + _DT_MONTHS[d.getMonth()] + ' ' +
+           _dtPad(d.getHours()) + ':' + _dtPad(d.getMinutes()) + ':' + _dtPad(d.getSeconds());
+  }
+
+  // Short timezone abbreviation for the given instant, e.g. "CEST" or "GMT+2".
+  function localTZAbbr(iso) {
+    var d = iso ? new Date(iso) : new Date();
+    if (isNaN(d.getTime())) d = new Date();
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].type === 'timeZoneName') return parts[i].value;
+      }
+    } catch (e) { /* ignore */ }
+    return '';
+  }
+
+  // Render one element from its data-iso attribute, honoring data-tz.
+  function renderLocalDate(el) {
+    if (!el) return;
+    var iso = el.getAttribute('data-iso');
+    if (!iso) return;  // no timestamp — keep the server-rendered fallback text
+    var txt = formatLocalDateTime(iso);
+    if (!txt) return;
+    var mode = el.getAttribute('data-tz');
+    if (mode === 'full' && CLIENT_TZ) txt += ' (' + CLIENT_TZ + ')';
+    else if (mode === 'abbr') { var a = localTZAbbr(iso); if (a) txt += ' (' + a + ')'; }
+    el.textContent = txt;
+  }
+
+  // Update an element's timestamp (from a WebSocket push) and re-render it.
+  function setLocalDate(el, iso) {
+    if (!el) return;
+    el.setAttribute('data-iso', iso || '');
+    renderLocalDate(el);
+  }
+
+  // Initial pass over every timestamp currently on the page.
+  function renderAllLocalDates(root) {
+    (root || document).querySelectorAll('[data-iso]').forEach(renderLocalDate);
+  }
+  renderAllLocalDates();
+
   // ── Live clock ──────────────────────────────────────────────────────────────
   function updateClock() {
     var now = new Date();

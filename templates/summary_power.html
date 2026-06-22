@@ -35,7 +35,7 @@
         </tr>
         <tr>
           <td class="label">Last Check</td>
-          <td class="value" data-field="last-check">{{ page_data.LastCheck }}</td>
+          <td class="value" data-field="last-check" data-iso="{{ page_data.LastCheckISO | default('') }}" data-tz="full">{{ page_data.LastCheck }}</td>
         </tr>
         <tr>
           <td class="label">Runtime Today</td>

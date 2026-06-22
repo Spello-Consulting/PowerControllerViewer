@@ -1,8 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 *)",
-      "Bash(.venv/bin/python3 *)"
+      "Read(//Users/nick/dev/finance_tools/*/*)",
+      "Skill(claude-api:*)",
+      "Bash(unzip:*)",
+      "Read(//private/tmp/*/**)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(uv:*)",
+      "Bash(mkdir:*)",
+      "Bash(echo:*)",
+      "Bash(break)",
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Read(//Users/nick/Library/LaunchAgents/**)",
+      "Bash(launchctl list *)",
+      "Bash(.venv/bin/python -c ' *)",
+      "Bash(.venv/bin/ruff check *)"
     ]
   }
 }
