@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-org-enums = { git = "https://github.com/NickElseySpelloC/org_enums", rev = "main" }
+org-enums = { git = "https://github.com/Spello-Consulting/org_enums", rev = "main" }
 
 [tool.ruff.lint]
 ignore = [
