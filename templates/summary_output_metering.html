@@ -75,6 +75,7 @@
           {% endfor %}
         </tr>
         {% endfor %}
+        {% if page_data.ShowUnmetered %}
         <tr>
           <td>Unmetered</td>
           {% for period in page_data.Totals %}
@@ -82,6 +83,7 @@
           <td>{{ period.OtherCostStr }}</td>
           {% endfor %}
         </tr>
+        {% endif %}
       </tbody>
       <tfoot>
         <tr>

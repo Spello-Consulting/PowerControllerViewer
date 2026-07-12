@@ -16,6 +16,7 @@ class ReportingPeriod:
     show: bool = False
     menu: bool = True
     have_global_data: bool = False
+    have_meter_data: bool = False
     global_energy_used: float = 0.0
     global_cost: float = 0.0
     output_energy_used: float = 0.0
@@ -44,6 +45,9 @@ def build_metering_view(
     # Format strings for the reporting totals
     totals = _format_totals(state, reporting_data.get("Totals") or [], reporting_data.get("Meters") or [])
     meters = reporting_data.get("Meters") or []
+    # The "Unmetered" line item is only meaningful when a global total exists to
+    # subtract the metered outputs from; hide it otherwise.
+    show_unmetered = any(period.get("HaveGlobalData") for period in totals)
 
     # Build period selector list
     reporting_periods = reporting_data.get("ReportingPeriods") or []
@@ -70,6 +74,7 @@ def build_metering_view(
         "CustomEndDate": custom_end.isoformat() if custom_end else None,
         "Totals": totals,
         "Meters": meters,
+        "ShowUnmetered": show_unmetered,
         "DebugMessage": debug_message,
     }
 
@@ -134,6 +139,8 @@ def build_metering_reporting_data(
             if not period.show:
                 continue
             usage_entry = _calc_meter_usage(meter, period)
+            if usage_entry["HaveData"]:
+                period.have_meter_data = True
             period.output_energy_used += usage_entry["EnergyUsed"]
             period.output_cost += usage_entry["Cost"]
             if period.have_global_data:
@@ -148,8 +155,16 @@ def build_metering_reporting_data(
     for period in reporting_periods:
         if not period.show:
             continue
-        period.other_energy_used = period.global_energy_used - period.output_energy_used
-        period.other_cost = period.global_cost - period.output_cost
+        if period.have_global_data:
+            global_energy_used = period.global_energy_used
+            global_cost = period.global_cost
+        else:
+            # No global totals available (e.g. non-Amber controllers): aggregate
+            # the reported total by summing the individual meters instead.
+            global_energy_used = period.output_energy_used
+            global_cost = period.output_cost
+        period.other_energy_used = global_energy_used - period.output_energy_used
+        period.other_cost = global_cost - period.output_cost
         if period.is_custom:
             period_and_date = f"Custom: {period.start_date.strftime('%d %b')} to {period.end_date.strftime('%d %b')}"
         else:
@@ -157,9 +172,10 @@ def build_metering_reporting_data(
         totals_out.append({
             "Period": period.name,
             "PeriodAndDate": period_and_date,
-            "HaveData": period.have_global_data,
-            "GlobalEnergyUsed": period.global_energy_used,
-            "GlobalCost": period.global_cost,
+            "HaveData": period.have_global_data or period.have_meter_data,
+            "HaveGlobalData": period.have_global_data,
+            "GlobalEnergyUsed": global_energy_used,
+            "GlobalCost": global_cost,
             "OtherEnergyUsed": period.other_energy_used,
             "OtherCost": period.other_cost,
         })
@@ -256,24 +272,28 @@ def _format_totals(state: dict, totals: list[dict], meters: list[dict]) -> list[
         if period.get("HaveData"):
             ge = period.get("GlobalEnergyUsed") or 0
             gc = period.get("GlobalCost") or 0
-            oe = period.get("OtherEnergyUsed") or 0
-            oc = period.get("OtherCost") or 0
             period["GlobalEnergyUsedStr"] = f"{ge:.1f} kWh"
             period["GlobalCostStr"] = f"{get_currency_major(state)}{gc:.2f}"
-            period["OtherEnergyUsedStr"] = f"{oe:.1f} kWh"
-            if ge > 0:
-                period["OtherEnergyUsedStr"] += f" ({oe / ge * 100:.1f}%)"
-            period["OtherCostStr"] = f"{get_currency_major(state)}{oc:.2f}"
-            if gc > 0:
-                period["OtherCostStr"] += f" ({oc / gc * 100:.1f}%)"
-            for meter in meters:
-                usage = (meter.get("Usage") or [])[idx] if idx < len(meter.get("Usage") or []) else {}
-                _format_meter_usage(state, usage)
+            if period.get("HaveGlobalData"):
+                oe = period.get("OtherEnergyUsed") or 0
+                oc = period.get("OtherCost") or 0
+                period["OtherEnergyUsedStr"] = f"{oe:.1f} kWh"
+                if ge > 0:
+                    period["OtherEnergyUsedStr"] += f" ({oe / ge * 100:.1f}%)"
+                period["OtherCostStr"] = f"{get_currency_major(state)}{oc:.2f}"
+                if gc > 0:
+                    period["OtherCostStr"] += f" ({oc / gc * 100:.1f}%)"
+            else:
+                period["OtherEnergyUsedStr"] = "N/A"
+                period["OtherCostStr"] = "N/A"
         else:
             period["GlobalEnergyUsedStr"] = "N/A"
             period["GlobalCostStr"] = "N/A"
             period["OtherEnergyUsedStr"] = "N/A"
             period["OtherCostStr"] = "N/A"
+        for meter in meters:
+            usage = (meter.get("Usage") or [])[idx] if idx < len(meter.get("Usage") or []) else {}
+            _format_meter_usage(state, usage)
     return totals
 
 
