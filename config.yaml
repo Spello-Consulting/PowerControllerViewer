@@ -1,0 +1,11 @@
+Files:
+  ConsoleVerbosity: summary
+  LogProcessID: true
+  LogfileMaxLines: 500
+  LogfileName: logfile.log
+  LogfileVerbosity: summary
+Website:
+  AccessKey: null
+  HostingIP: null
+  PageAutoRefresh: 10
+  Port: '8000'

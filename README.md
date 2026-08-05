@@ -14,19 +14,19 @@ Ensure that the basic prerequities are installed:
 
 ## Installing the app 
 
-For this documentation, we'll assume your current user is `pi` and you're installing the app at _/home/pi/scripts/PowerControllerViewer/_
+For this documentation, we'll assume your current user is `nick` and you're installing the app at _/home/nick/scripts/PowerControllerViewer/_
 
 Clone the app from the github repo
 
 ```bash
-cd /home/pi/scripts/
+cd /home/nick/scripts/
 git clone https://github.com/NickElseySpelloC/PowerControllerViewer.git
 ```
 
 Now create and edit the config file:
 
 ```bash
-cd /home/pi/scripts/PowerControllerViewer
+cd /home/nick/scripts/PowerControllerViewer
 cp config.yaml.example config.yaml
 
 nano config.yaml
@@ -98,7 +98,7 @@ Now go back to your web brower and refresh the web app page. You should see some
 # Setup a production Environment
 This section shows you how to do a production deployment of the PowerControllerViewer web app on a Linux host (inc. a  RaspberryPi). This assumes:
 
-1. The app has been deployed to _/home/pi/scripts/PowerControllerViewer_ and tested as per the instructions above.
+1. The app has been deployed to _/home/nick/scripts/PowerControllerViewer_ and tested as per the instructions above.
 2. Your host's IP address is 192.168.1.20 and the app is listening on port 8000 (change if required in the examples below). 
 
 ## 1. Install Prerequisites
@@ -113,35 +113,12 @@ Edit the config.yaml file and set the _HostingIP_ key to 127.0.0.1. This forces 
 
 
 ## 3. Create a systemd service for the app
+
+Create a new service file and edit it to review:
 ```bash
+sudo cp deploy/PowerControllerViewer.service /etc/systemd/system/PowerControllerViewer.service
+
 sudo nano /etc/systemd/system/PowerControllerViewer.service
-```
-
-And paste the following into the editor:
-```
-[Unit]
-Description=PowerControllerViewer web app
-After=network.target
-
-[Service]
-ExecStart=/home/pi/scripts/PowerControllerViewer/launch.sh 
-WorkingDirectory=/home/pi/scripts/PowerControllerViewer
-StandardOutput=journal
-StandardError=journal
-User=pi
-Environment=PYTHONUNBUFFERED=1
-Environment=PATH=/home/pi/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-
-# Logging and restart behavior
-Restart=on-failure        # Only restart on non-zero exit code
-RestartSec=10             # Wait 10 seconds before restarting
-
-# Limit restart attempts (3 times in 60 seconds)
-StartLimitIntervalSec=60
-StartLimitBurst=3
-
-[Install]
-WantedBy=multi-user.target
 ```
 
 Enable and start the service:

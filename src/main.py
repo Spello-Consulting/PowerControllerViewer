@@ -1,4 +1,5 @@
 """PowerControllerViewer — FastAPI application entry point."""
+import argparse
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -20,14 +21,32 @@ from routes import register_routes
 from state_store import StateStore
 from websocket_manager import ConnectionManager
 
-CONFIG_FILE = "config.yaml"
+DEFAULT_CONFIG_FILE = "config.yaml"
+
+
+def parse_command_line_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse command line arguments for the application."""
+    parser = argparse.ArgumentParser(
+        prog="PowerControllerViewer",
+        description="PowerControllerViewer — FastAPI application entry point.",
+    )
+    parser.add_argument(
+        "--config",
+        dest="config",
+        default=DEFAULT_CONFIG_FILE,
+        help=f"Path to the YAML config file to use (default: {DEFAULT_CONFIG_FILE})",
+    )
+    return parser.parse_args(argv)
+
+
+args = parse_command_line_args()
 
 # ── Module-level singletons (initialised before lifespan) ────────────────────
 _schemas = ConfigSchema()
 
 try:
     config = SCConfigManager(
-        config_file=CONFIG_FILE,
+        config_file=args.config,
         default_config=_schemas.default,
         validation_schema=_schemas.validation,
         placeholders=_schemas.placeholders,
