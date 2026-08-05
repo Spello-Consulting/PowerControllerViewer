@@ -8,7 +8,7 @@ StartLimitBurst=3
 
 
 [Service]
-ExecStart=/home/nick/scripts/PowerControllerViewer/launch.sh 
+ExecStart=/home/nick/scripts/PowerControllerViewer/scripts/launch.sh 
 WorkingDirectory=/home/nick/scripts/PowerControllerViewer
 StandardOutput=journal
 StandardError=journal
