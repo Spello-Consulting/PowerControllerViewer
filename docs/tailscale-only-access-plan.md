@@ -33,7 +33,7 @@ Browser / Python client (on tailnet)
         │  HTTPS 443  (WireGuard-encrypted, tailnet only)
         ▼
   tailscaled on sydneyapp   ← terminates TLS with cert for
-        │                      sydneyapp.elseyworld.ts.net
+        │                      sydneyapp.desmana-eagle.ts.net
         │  HTTP → 127.0.0.1:8000
         ▼
   uvicorn / FastAPI (unchanged: production.yaml HostingIP 127.0.0.1, Port 8000)
@@ -49,11 +49,11 @@ Browser / Python client (on tailnet)
   warnings and **no** `verify=False`.
 
 > **Important naming note:** the cert's name is the *full* MagicDNS FQDN
-> `sydneyapp.elseyworld.ts.net`, not the bare `sydneyapp`. Reaching
+> `sydneyapp.desmana-eagle.ts.net`, not the bare `sydneyapp`. Reaching
 > `https://sydneyapp` will trip a certificate-name-mismatch warning in Chrome.
-> Use / bookmark the full `https://sydneyapp.elseyworld.ts.net` to get the
+> Use / bookmark the full `https://sydneyapp.desmana-eagle.ts.net` to get the
 > clean, warning-free experience. (The tailnet was renamed from
-> `taileaf681.ts.net` to `elseyworld.ts.net` — see step 0 below.)
+> `taileaf681.ts.net` to `desmana-eagle.ts.net` — see step 0 below.)
 
 ---
 
@@ -62,12 +62,14 @@ Browser / Python client (on tailnet)
 All steps run **on sydneyapp** unless noted. None touch the app source.
 
 ### 0. Rename the tailnet (do this first)
-Rename `taileaf681.ts.net` → `elseyworld.ts.net` in the admin console **before**
+Rename `taileaf681.ts.net` → `desmana-eagle.ts.net` in the admin console **before**
 enabling certs/Serve, so the cert is minted for the final name with no reissue
-churn. Safe to do now: current access to sydneyapp is via `power.elseyworld.com`
+churn.
+
+Safe to do now: current access to sydneyapp is via `power.elseyworld.com`
 and Tailscale IP/short-name, none of which carry the tailnet suffix, and no
 `*.ts.net` HTTPS certs exist yet. The rename only changes the FQDN suffix
-(`sydneyapp.taileaf681.ts.net` → `sydneyapp.elseyworld.ts.net`); Tailscale IPs
+(`sydneyapp.taileaf681.ts.net` → `sydneyapp.desmana-eagle.ts.net`); Tailscale IPs
 and the short MagicDNS name (`sydneyapp`) are unchanged. The old name is
 released after rename, and Tailscale limits rename frequency — so this is the
 name we keep.
@@ -79,8 +81,22 @@ name we keep.
 
 ### 2. Confirm the node name and cert
 ```bash
-tailscale status          # confirm this node is "sydneyapp" and suffix is elseyworld.ts.net
-sudo tailscale cert sydneyapp.elseyworld.ts.net   # optional: pre-provision / prove certs work
+tailscale status          # confirm this node is "sydneyapp" and suffix is desmana-eagle.ts.net
+```
+
+Make sure `sydneyapp.desmana-eagle.ts.net` has propigated to the Let's encrypt servers:
+
+```bash
+dig +short NS desmana-eagle.ts.net
+dig +short SOA desmana-eagle.ts.net
+```
+
+If these come back empty, the renamed zone isn't live on public DNS yet → pure propagation, just wait. If they return Tailscale nameservers, the zone exists and it's the challenge record specifically that's lagging (still resolves with time).
+
+Now we can check that the certs work:
+
+```bash
+sudo tailscale cert sydneyapp.desmana-eagle.ts.net   # optional: pre-provision / prove certs work
 ```
 
 ### 3. Stand up Tailscale Serve (tailnet-only HTTPS → local app)
@@ -96,13 +112,13 @@ sudo tailscale serve status     # verify: 443 → http://127.0.0.1:8000, tailnet
 
 **Verify from a second tailnet device** before tearing anything down:
 ```bash
-curl -I https://sydneyapp.elseyworld.ts.net/         # 200, valid cert
-# open https://sydneyapp.elseyworld.ts.net/ in Chrome → padlock, no warning, live WS updates
+curl -I https://sydneyapp.desmana-eagle.ts.net/         # 200, valid cert
+# open https://sydneyapp.desmana-eagle.ts.net/ in Chrome → padlock, no warning, live WS updates
 ```
 
 ### 4. Reconfigure the producer apps (PowerController, LightingControl)
 Change their target base URL from `https://power.elseyworld.com` to
-`https://sydneyapp.elseyworld.ts.net`, keeping the existing `?key=…` access key
+`https://sydneyapp.desmana-eagle.ts.net`, keeping the existing `?key=…` access key
 on `/api/submit`. Applies to both the local (same-box) and pi-spello instances.
 
 - These live in **separate repos** (not in PowerControllerViewer), so the change
@@ -151,7 +167,7 @@ Serve config is separate from nginx, so rollback is low-risk:
 
 ## Verification checklist (end to end)
 1. `sudo tailscale serve status` shows `443 → http://127.0.0.1:8000`.
-2. From another tailnet device: `curl -I https://sydneyapp.elseyworld.ts.net/`
+2. From another tailnet device: `curl -I https://sydneyapp.desmana-eagle.ts.net/`
    returns `200` with a valid cert; Chrome shows a padlock and the live view
    updates over WebSocket.
 3. Both producers (local + pi-spello) POST successfully to the new URL; app log
