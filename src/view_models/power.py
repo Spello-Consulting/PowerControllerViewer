@@ -65,6 +65,7 @@ def build_power_view(
         "next_url": nav_url("/summary", key, state_idx=next_idx) if next_idx is not None else None,
         "NextDeviceName": (next_state.get("Output", {}).get("Name") or next_state.get("DeviceName")) if next_state else None,
         "daily_url": nav_url("/daily", key, state_idx=state_idx),
+        "HasDailyData": bool(daily_data_list),
         "LastCheck": format_date_with_ordinal(last_save, show_time=True),
         "LastCheckISO": iso_or_empty(last_save),
         "TimeNow": DateHelper.now_str(),

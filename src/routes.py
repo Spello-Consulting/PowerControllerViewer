@@ -17,6 +17,7 @@ from view_models.lighting import (
     build_lighting_view,
     build_lighting_ws_update,
 )
+from view_models.common import nav_url
 from view_models.metering import build_metering_view, validate_metering_args
 from view_models.power import (
     build_power_daily_view,
@@ -143,7 +144,7 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
 
         state = state_store.get_by_index(state_idx)
         if not state:
-            return RedirectResponse(url="/")
+            return RedirectResponse(url=nav_url("/", _key()))
 
         all_states = _all_states_indexed()
         key = _key()
@@ -180,15 +181,15 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
 
         state_idx, _ = _resolve_state_idx(request)
         if state_idx is None:
-            return RedirectResponse(url="/")
+            return RedirectResponse(url=nav_url("/", _key()))
 
         state = state_store.get_by_index(state_idx)
         if not state:
-            return RedirectResponse(url="/")
+            return RedirectResponse(url=nav_url("/", _key()))
 
         day, max_day = _resolve_day(request, state_idx)
         if day is None:
-            return RedirectResponse(url=f"/summary?state_idx={state_idx}")
+            return RedirectResponse(url=nav_url("/summary", _key(), state_idx=state_idx))
 
         key = _key()
         refresh = _refresh()
@@ -202,7 +203,7 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
             page_data = build_lighting_daily_view(state, state_idx, day, max_day, key, refresh)
             return templates.TemplateResponse(request, "daily_lightingcontrol.html", {"page_data": page_data})
 
-        return RedirectResponse(url=f"/summary?state_idx={state_idx}")
+        return RedirectResponse(url=nav_url("/summary", _key(), state_idx=state_idx))
 
     # ── POST /api/submit ──────────────────────────────────────────────────────
 

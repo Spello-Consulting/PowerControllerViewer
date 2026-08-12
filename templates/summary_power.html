@@ -8,7 +8,11 @@
   {% if page_data.next_url %}
   <a href="{{ page_data.next_url }}" class="btn">{{ page_data.NextDeviceName }} &rsaquo;</a>
   {% endif %}
+  {% if page_data.HasDailyData %}
   <a href="{{ page_data.daily_url }}" class="btn">Daily Detail</a>
+  {% else %}
+  <span class="btn btn--disabled">Daily Detail</span>
+  {% endif %}
 </div>
 
 <div class="card">
