@@ -1,17 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PowerControllerViewer</title>
-  <link rel="stylesheet" href="/static/styles.css">
-</head>
-<body>
-<header>
-  <a class="header-home" href="{{ home_url }}">PowerController Viewer</a>
-  <span id="clock"></span>
-</header>
+{% extends "_base.html" %}
 
+{% block title %}PowerControllerViewer{% endblock %}
+
+{% block body %}
 <div class="card">
   <div class="card-header">
     <span class="card-title">No Device Data</span>
@@ -20,18 +11,4 @@
     <p>No device state files have been received yet. Waiting for devices to submit data.</p>
   </div>
 </div>
-
-<script>
-  function updateClock() {
-    var now = new Date();
-    var h = String(now.getHours()).padStart(2,'0');
-    var m = String(now.getMinutes()).padStart(2,'0');
-    var s = String(now.getSeconds()).padStart(2,'0');
-    var el = document.getElementById('clock');
-    if (el) el.textContent = h+':'+m+':'+s;
-  }
-  updateClock();
-  setInterval(updateClock, 1000);
-</script>
-</body>
-</html>
+{% endblock %}

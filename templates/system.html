@@ -1,0 +1,15 @@
+{% extends "_base.html" %}
+
+{% block title %}System — PowerControllerViewer{% endblock %}
+
+{% block body %}
+<div class="info-page">
+  <h2>System information</h2>
+  <div class="info-card">
+    {% for label, value in system_info.items() %}
+    <div class="info-row"><span class="info-label">{{ label }}</span><span class="info-value">{{ value }}</span></div>
+    {% endfor %}
+  </div>
+  <p><a class="btn" href="{{ page_data.home_url }}">← Back to home</a></p>
+</div>
+{% endblock %}

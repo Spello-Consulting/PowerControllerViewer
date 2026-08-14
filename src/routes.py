@@ -3,7 +3,12 @@ import asyncio
 import contextlib
 import logging
 import os
+import platform
+import time
 import traceback
+from datetime import datetime
+
+import psutil
 
 from fastapi import Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -17,7 +22,7 @@ from view_models.lighting import (
     build_lighting_view,
     build_lighting_ws_update,
 )
-from view_models.common import nav_url
+from view_models.common import format_date_with_ordinal, iso_or_empty, nav_url
 from view_models.metering import build_metering_view, validate_metering_args
 from view_models.power import (
     build_power_daily_view,
@@ -117,6 +122,34 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
             return f"Devices: {n} | Log level: all"
         return None
 
+    def _info_page_data() -> dict:
+        """Minimal page_data so _base.html's header/footer render on info pages.
+
+        Info pages have no device 'last update', so the footer timestamp reflects
+        when the page was generated.
+        """
+        now = datetime.now().astimezone()
+        return {
+            "home_url": nav_url("/", _key()),
+            "AccessKey": _key() or "",
+            "LastCheck": format_date_with_ordinal(now, show_time=True),
+            "LastCheckISO": iso_or_empty(now),
+        }
+
+    def _format_uptime(seconds: float) -> str:
+        """Format a boot-relative uptime as 'Xd Yh Zm' (days/hours omitted when zero)."""
+        total = int(seconds)
+        days, rem = divmod(total, 86400)
+        hours, rem = divmod(rem, 3600)
+        minutes = rem // 60
+        parts = []
+        if days:
+            parts.append(f"{days}d")
+        if hours or days:
+            parts.append(f"{hours}h")
+        parts.append(f"{minutes}m")
+        return " ".join(parts)
+
     # ── GET / ────────────────────────────────────────────────────────────────
 
     @app.get("/", response_class=HTMLResponse, name="home")
@@ -126,10 +159,62 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
 
         all_states = _all_states_indexed()
         if not all_states:
-            return templates.TemplateResponse(request, "no_state.html", {"home_url": "/"})
+            return templates.TemplateResponse(request, "no_state.html", {"page_data": _info_page_data()})
 
         page_data = build_home_view(all_states, _key(), _refresh())
         return templates.TemplateResponse(request, "home.html", {"page_data": page_data})
+
+    # ── GET /system ────────────────────────────────────────────────────────────
+
+    @app.get("/system", response_class=HTMLResponse, name="system")
+    async def system(request: Request):
+        if not _check_key(request):
+            return HTMLResponse("Access forbidden.", status_code=403)
+
+        # cpu_percent with a short interval blocks; run it off the event loop.
+        cpu_percent = await asyncio.to_thread(psutil.cpu_percent, 0.3)
+        memory = psutil.virtual_memory()
+        uptime = time.time() - psutil.boot_time()
+
+        system_info = {
+            "Operating system": f"{platform.system()} {platform.release()}",
+            "Platform": platform.platform(),
+            "Architecture": platform.machine(),
+            "Hostname": platform.node(),
+            "Python version": platform.python_version(),
+            "Uptime": _format_uptime(uptime),
+            "Memory used": f"{memory.percent:.0f}%",
+            "CPU load": f"{cpu_percent:.0f}%",
+            "Number of data files loaded": state_store.count(),
+        }
+        return templates.TemplateResponse(
+            request,
+            "system.html",
+            {"page_data": _info_page_data(), "system_info": system_info},
+        )
+
+    # ── GET /config ────────────────────────────────────────────────────────────
+
+    @app.get("/config", response_class=HTMLResponse, name="config")
+    def show_config(request: Request):
+        if not _check_key(request):
+            return HTMLResponse("Access forbidden.", status_code=403)
+
+        config_path = getattr(config, "config_path", None)
+        try:
+            config_text = config_path.read_text(encoding="utf-8") if config_path else "No config file."
+        except OSError as exc:
+            config_text = f"Could not read config file: {exc}"
+
+        return templates.TemplateResponse(
+            request,
+            "config.html",
+            {
+                "page_data": _info_page_data(),
+                "config_text": config_text,
+                "config_path": str(config_path) if config_path else "",
+            },
+        )
 
     # ── GET /summary ─────────────────────────────────────────────────────────
 
@@ -140,7 +225,7 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
 
         state_idx, next_idx = _resolve_state_idx(request)
         if state_idx is None:
-            return templates.TemplateResponse(request, "no_state.html", {"home_url": "/"})
+            return templates.TemplateResponse(request, "no_state.html", {"page_data": _info_page_data()})
 
         state = state_store.get_by_index(state_idx)
         if not state:

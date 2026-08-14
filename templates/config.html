@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+
+{% block title %}Config — PowerControllerViewer{% endblock %}
+
+{% block body %}
+<div class="info-page">
+  <h2>Configuration file</h2>
+  {% if config_path %}<p class="config-path">{{ config_path }}</p>{% endif %}
+  <pre class="config-dump">{{ config_text }}</pre>
+  <p><a class="btn" href="{{ page_data.home_url }}">← Back to home</a></p>
+</div>
+{% endblock %}
