@@ -526,6 +526,7 @@ header h1 {
 /* ── Temperature display ─────────────────────────────────────────────────────── */
 
 .temp-display__name {
+  font-size: 1.5rem; /* fallback: Safari < 13.1 */
   font-size: clamp(0.75rem, 2.3vw, 6rem);
   text-align: center;
   color: var(--title);
@@ -534,6 +535,7 @@ header h1 {
 }
 
 .temp-display__value {
+  font-size: 5rem; /* fallback: Safari < 13.1 */
   font-size: clamp(3.5rem, 8.0vw, 5.0rem);
   font-weight: 300;
   line-height: 1.3;
@@ -541,11 +543,13 @@ header h1 {
 }
 
 .temp-display__decimal {
+  font-size: 2.25rem; /* fallback: Safari < 13.1 */
   font-size: clamp(1.2rem, 2.75vw, 2.25rem);
   vertical-align: baseline;
 }
 
 .temp-display__not-available {
+  font-size: 5rem; /* fallback: Safari < 13.1 */
   font-size: clamp(3.5rem, 8.0vw, 5.0rem);
   font-weight: 300;
   line-height: 1.3;
@@ -643,10 +647,33 @@ header h1 {
   overflow: hidden;
 }
 
-.tp-chart-card canvas {
-  width: 100% !important;
-  height: 100% !important;
+/* Explicit relative wrapper: Safari 12 can't resolve height:100% through flex/grid */
+.tp-chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
+
+.tp-chart-wrap canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ── Legacy browsers (iOS 12 Safari etc.; class set in temp_probes.html) ───── */
+
+.legacy-browser .tp-page {
+  height: auto;
+  min-height: calc(100vh - 140px);
+  overflow: visible;
+}
+
+.legacy-browser .tp-chart-card { min-height: 300px; }
+.legacy-browser .tp-chart-card .card-content { height: 260px; flex: none; }
+
+/* flex "gap" is unsupported before Safari 14.1 */
+.legacy-browser .tp-charts > * + * { margin-top: 0.75rem; }
+.legacy-browser .smart-device-row { margin-right: 1.5rem; }
 
 /* ── Smart device indicators (temp probes page) ─────────────────────────────── */
 

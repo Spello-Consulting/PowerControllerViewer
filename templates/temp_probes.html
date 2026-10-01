@@ -4,8 +4,19 @@
 
 {% block head %}
 {% if page_data.ChartsEnabled %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script>
+  // Chart.js 4 needs modern JS syntax (optional chaining etc). Old browsers such
+  // as iOS 12 Safari get the legacy Chart.js 2 bundle (includes moment) instead.
+  var LEGACY_CHARTS = false;
+  try { new Function('var a = {}; return a?.b ?? 1;'); } catch (e) { LEGACY_CHARTS = true; }
+  if (LEGACY_CHARTS) {
+    document.documentElement.className += ' legacy-browser';
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.bundle.min.js"><\/script>');
+  } else {
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"><\/script>');
+    document.write('<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"><\/script>');
+  }
+</script>
 {% endif %}
 {% endblock %}
 
@@ -67,7 +78,7 @@
         <span class="card-title">{{ chart.name }}</span>
       </div>
       <div class="card-content">
-        <canvas id="chart-{{ loop.index0 }}"></canvas>
+        <div class="tp-chart-wrap"><canvas id="chart-{{ loop.index0 }}"></canvas></div>
       </div>
     </div>
     {% endfor %}
@@ -117,6 +128,33 @@
         spanGaps: false,
       };
     });
+
+    if (LEGACY_CHARTS) {
+      new Chart(ctx, {
+        type: 'line',
+        data: { datasets: datasets.map(function (d) { d.lineTension = 0.2; return d; }) },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 0 },
+          legend: { display: datasets.length > 1, labels: { boxWidth: 36 } },
+          scales: {
+            xAxes: [{
+              type: 'time',
+              time: {
+                min: chart.x_min,
+                max: chart.x_max,
+                tooltipFormat: 'DD MMM HH:mm',
+                displayFormats: { hour: 'D MMM HH:mm', day: 'D MMM' },
+              },
+              ticks: { maxTicksLimit: 8 },
+            }],
+            yAxes: [{ scaleLabel: { display: true, labelString: '\u00b0C' } }],
+          },
+        },
+      });
+      return;
+    }
 
     new Chart(ctx, {
       type: 'line',
