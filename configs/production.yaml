@@ -1,7 +1,7 @@
 # PowerControllerViewer production configuration file for Sydney
 
 Website:
-  HostingIP: 127.0.0.1
+  HostingIP: 192.168.86.36
   Port: 8000
   PageAutoRefresh: 200
   DebugMode: False
