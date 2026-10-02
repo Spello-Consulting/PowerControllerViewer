@@ -56,7 +56,8 @@ except RuntimeError as e:
     sys.exit(1)
 
 try:
-    logger = SCLogger(config.get_logger_settings())
+    heartbeat_config = config.get("HeartbeatMonitor")
+    logger = SCLogger(config.get_logger_settings(), heartbeat_config=heartbeat_config)
 except RuntimeError as e:
     print(f"Logger init error: {e}", file=sys.stderr)
     sys.exit(1)

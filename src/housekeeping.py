@@ -48,6 +48,9 @@ async def housekeeping_loop(config, logger, state_store):
             except Exception as e:  # noqa: BLE001
                 logger.log_message(f"Housekeeping: external change check error: {e}", "warning")
 
+            # Ping the heartbeat monitor - this function takes care of frequency checks
+            logger.ping_heartbeat()                
+
         except asyncio.CancelledError:
             raise
         except Exception:

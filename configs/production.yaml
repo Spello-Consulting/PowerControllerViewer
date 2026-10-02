@@ -15,3 +15,10 @@ Files:
   LogfileVerbosity: debug
   # How much information do we write to the console. One of: error; warning; summary; detailed; debug; all
   ConsoleVerbosity: debug
+
+HeartbeatMonitor:
+  Enable: True
+  WebsiteURL: https://incidents.betterstack.com/api/v1/heartbeat/aTqpjc4n38p46N9rFMRBpgTD
+  HeartbeatTimeout: 5
+  Frequency: 20
+

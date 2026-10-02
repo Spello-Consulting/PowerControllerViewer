@@ -16,3 +16,10 @@ Files:
   # How much information do we write to the console. One of: error; warning; summary; detailed; debug; all
   ConsoleVerbosity: debug
   DeleteOldStateFiles: 0  # Delete state files older than this many hours. Set to 0 or blank to disable deletion.
+
+HeartbeatMonitor:
+  Enable: True
+  WebsiteURL: https://incidents.betterstack.com/api/v1/heartbeat/zcsNtnEQHRDNWJENvcZc94fx
+  HeartbeatTimeout: 5
+  Frequency: 20
+
