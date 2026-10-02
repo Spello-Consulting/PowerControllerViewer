@@ -1,7 +1,7 @@
 # PowerControllerViewer production configuration file for Sydney
 
 Website:
-  HostingIP: 192.168.86.36
+  HostingIP: 0.0.0.0
   Port: 8000
   PageAutoRefresh: 200
   DebugMode: False
@@ -12,6 +12,6 @@ Files:
   LogProcessID: True
   LogfileMaxLines: 2500
   # How much information do we write to the log file. One of: none; error; warning; summary; detailed; debug; all
-  LogfileVerbosity: detailed
+  LogfileVerbosity: debug
   # How much information do we write to the console. One of: error; warning; summary; detailed; debug; all
-  ConsoleVerbosity: detailed
+  ConsoleVerbosity: debug
