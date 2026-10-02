@@ -28,6 +28,13 @@ managed_scripts = ["launch.sh"]
 [tool.uv.sources]
 org-enums = { git = "https://github.com/Spello-Consulting/org_enums", rev = "main" }
 
+[project.optional-dependencies]
+dev = [
+    "mkdocs>=1.6.1",
+    "mkdocs-include-markdown-plugin>=6.2.2",
+    "mkdocs-material>=9.6.14",
+]
+
 [tool.ruff.lint]
 ignore = [
     "DOC201",  # return type not documented in docstring — too noisy for internal helpers

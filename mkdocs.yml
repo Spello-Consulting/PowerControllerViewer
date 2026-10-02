@@ -1,0 +1,38 @@
+site_name: PowerControllerViewer
+site_url: https://spello-consulting.github.io/PowerControllerViewer/
+repo_url: https://github.com/Spello-Consulting/PowerControllerViewer
+
+theme:
+  name: material
+  features:
+    - navigation.expand
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - tables
+  - attr_list
+  - md_in_html
+
+plugins:
+  - search
+  - include-markdown
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation steps: installation/index.md
+    - Prerequisite Software: installation/prerequisites.md
+    - App Installation: installation/install_app.md
+  - Configuration Guide:
+    - Configuration Overview: configuration/index.md
+    - Example File: configuration/example_config.md
+    - Sections:
+      - Website: configuration/sections/website.md
+      - Files: configuration/sections/files.md
+      - HeartbeatMonitor: configuration/sections/heartbeat_monitor.md
+  - Running the App: running.md
+  - Production Deployment: prod_deployment.md
+  - Remote Access with Tailscale: tailscale.md
+  - Upgrading an existing installation: upgrading.md
