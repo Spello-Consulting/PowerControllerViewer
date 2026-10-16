@@ -39,7 +39,8 @@ Now refresh the web app page in your browser. You should see something like this
 
 ## Other pages
 
-* `/system` shows platform information and host metrics, plus the number of state data files loaded.
+* `/system` shows the application version (from `pyproject.toml`), git branch, status (ahead/behind upstream, based on the last fetch) and count of uncommitted changes, plus platform information and host metrics and the number of state data files loaded. Git rows are omitted when the app isn't running from a git checkout. A **Logs** button opens the log viewer.
+* `/log` shows the full contents of the application log file (`Files: LogfileName`). Tick **Live updates** to follow new lines as they are written (like `tail -f`, polled every second; the choice is remembered per browser), and use **Download** to save a copy. The `/log/content` and `/log/download` endpoints are protected by the same access key as the other pages.
 * `/config` shows the active configuration file.
 
 # Next Step >> [Production Deployment](prod_deployment.md)

@@ -10,6 +10,10 @@
     <div class="info-row"><span class="info-label">{{ label }}</span><span class="info-value">{{ value }}</span></div>
     {% endfor %}
   </div>
-  <p><a class="btn" href="{{ page_data.home_url }}">← Back to home</a></p>
+  {% set key_qs = ('?key=' ~ page_data.AccessKey) if page_data.AccessKey else '' %}
+  <p class="btn-row">
+    <a class="btn" href="{{ page_data.home_url }}">← Back to home</a>
+    <a class="btn" href="/log{{ key_qs }}">Logs</a>
+  </p>
 </div>
 {% endblock %}
