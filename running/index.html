@@ -930,7 +930,8 @@
 <p><img alt="Summary page" src="../images/home_page.png" /></p>
 <h2 id="other-pages">Other pages</h2>
 <ul>
-<li><code>/system</code> shows platform information and host metrics, plus the number of state data files loaded.</li>
+<li><code>/system</code> shows the application version (from <code>pyproject.toml</code>), git branch, status (ahead/behind upstream, based on the last fetch) and count of uncommitted changes, plus platform information and host metrics and the number of state data files loaded. Git rows are omitted when the app isn't running from a git checkout. A <strong>Logs</strong> button opens the log viewer.</li>
+<li><code>/log</code> shows the full contents of the application log file (<code>Files: LogfileName</code>). Tick <strong>Live updates</strong> to follow new lines as they are written (like <code>tail -f</code>, polled every second; the choice is remembered per browser), and use <strong>Download</strong> to save a copy. The <code>/log/content</code> and <code>/log/download</code> endpoints are protected by the same access key as the other pages.</li>
 <li><code>/config</code> shows the active configuration file.</li>
 </ul>
 <h1 id="next-step-production-deployment">Next Step &gt;&gt; <a href="../prod_deployment/">Production Deployment</a></h1>
