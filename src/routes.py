@@ -6,13 +6,17 @@ import os
 import platform
 import time
 import traceback
+from dataclasses import asdict
 from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import psutil
 
 from fastapi import Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
+from sc_foundation import SCCommon
 
 from ingest import handle_submit
 from websocket_manager import _ws_dumps
@@ -32,6 +36,27 @@ from view_models.power import (
 from view_models.temp_probes import build_temp_probes_view, build_temp_probes_ws_update
 
 log = logging.getLogger(__name__)
+
+
+def _deployment_rows(info: dict[str, Any]) -> dict[str, str]:
+    """Build the version and git rows for the system page.
+
+    The git remote is deliberately omitted: an HTTPS remote URL can embed a token.
+
+    Args:
+        info: The dictionary returned by ``SCCommon.get_deployment_info()``.
+
+    Returns:
+        Display rows keyed by label. Git rows are omitted when the app is not
+        running from a git checkout.
+    """
+    rows = {"Application version": str(info.get("version") or "—")}
+    if info.get("git_changes") is None:
+        return rows
+    rows["Git branch"] = str(info.get("git_branch") or "(detached HEAD)")
+    rows["Git status"] = str(info.get("git_status") or "Unknown")
+    rows["Uncommitted changes"] = str(info["git_changes"])
+    return rows
 
 
 def register_routes(app, templates: Jinja2Templates, config, logger, state_store, ws_manager):
@@ -136,6 +161,13 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
             "LastCheckISO": iso_or_empty(now),
         }
 
+    def _logfile_path() -> str | None:
+        """Return the log file path, or None when file logging is disabled."""
+        if not logger.file_logging_enabled:
+            return None
+        path: str | None = logger.get_logfile_path()
+        return path
+
     def _format_uptime(seconds: float) -> str:
         """Format a boot-relative uptime as 'Xd Yh Zm' (days/hours omitted when zero)."""
         total = int(seconds)
@@ -175,8 +207,11 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
         cpu_percent = await asyncio.to_thread(psutil.cpu_percent, 0.3)
         memory = psutil.virtual_memory()
         uptime = time.time() - psutil.boot_time()
+        # Runs several git subprocesses; keep them off the event loop.
+        deployment_info = await asyncio.to_thread(SCCommon.get_deployment_info)
 
         system_info = {
+            **_deployment_rows(deployment_info),
             "Operating system": f"{platform.system()} {platform.release()}",
             "Platform": platform.platform(),
             "Architecture": platform.machine(),
@@ -214,6 +249,60 @@ def register_routes(app, templates: Jinja2Templates, config, logger, state_store
                 "config_text": config_text,
                 "config_path": str(config_path) if config_path else "",
             },
+        )
+
+    # ── GET /log ──────────────────────────────────────────────────────────────
+
+    @app.get("/log", response_class=HTMLResponse, name="log")
+    async def show_log(request: Request) -> Response:
+        """Render the log viewer page with the current log file contents.
+
+        The page polls ``/log/content`` for new lines while its *Live updates*
+        checkbox is ticked.
+        """
+        if not _check_key(request):
+            return HTMLResponse("Access forbidden.", status_code=403)
+
+        chunk = await asyncio.to_thread(logger.read_logfile_since)
+        return templates.TemplateResponse(
+            request,
+            "log.html",
+            {"page_data": _info_page_data(), "log_path": _logfile_path() or "", "log_chunk": chunk},
+        )
+
+    @app.get("/log/content", name="log_content")
+    async def log_content(request: Request, generation: int | None = None, offset: int = 0) -> Response:
+        """Return log file content written since a previous read.
+
+        Pass back the ``generation`` and ``offset`` from the previous response. When
+        ``reset`` is true the client should replace its content with ``text``
+        rather than append it (the log file was trimmed or replaced).
+        """
+        if not _check_key(request):
+            return HTMLResponse("Access forbidden.", status_code=403)
+
+        chunk = await asyncio.to_thread(logger.read_logfile_since, generation, offset)
+        return JSONResponse(asdict(chunk), headers={"Cache-Control": "no-store"})
+
+    @app.get("/log/download", name="log_download")
+    async def log_download(request: Request) -> Response:
+        """Download a copy of the log file.
+
+        The content is a snapshot read under the logger's lock, so it is never
+        caught mid-trim. Returns 404 when file logging is disabled.
+        """
+        if not _check_key(request):
+            return HTMLResponse("Access forbidden.", status_code=403)
+
+        log_path = _logfile_path()
+        if not log_path:
+            return HTMLResponse("File logging is not enabled.", status_code=404)
+
+        text = await asyncio.to_thread(logger.read_logfile)
+        return Response(
+            content=text,
+            media_type="text/plain; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{Path(log_path).name}"'},
         )
 
     # ── GET /summary ─────────────────────────────────────────────────────────
