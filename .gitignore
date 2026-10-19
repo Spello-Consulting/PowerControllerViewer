@@ -24,3 +24,10 @@ logs/
 static/*.jpg
 .env.target
 site/
+
+# Test and type-check reports
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.mypy_cache/

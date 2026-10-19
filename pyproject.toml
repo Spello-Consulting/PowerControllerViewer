@@ -34,7 +34,10 @@ dev = [
     "mkdocs>=1.6.1",
     "mkdocs-include-markdown-plugin>=6.2.2",
     "mkdocs-material>=9.6.14",
+    "mypy>=2.4.0",
     "pytest>=8.4.2",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.1",
 ]
 
 [tool.ruff.lint]
@@ -45,3 +48,33 @@ ignore = [
     "PLR0915", # too many statements — register_routes is intentionally monolithic
 ]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 95
+
+[tool.mypy]
+files = ["tests"]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/src"
+explicit_package_bases = true
+strict = true
+
+# Existing application modules are not yet fully annotated. Check the test code
+# strictly without pulling that separate typing migration into this change.
+[[tool.mypy.overrides]]
+module = [
+    "config_schemas", "housekeeping", "routes", "state_store",
+    "websocket_manager", "view_models.*",
+]
+follow_imports = "skip"
+
+[[tool.mypy.overrides]]
+module = ["cerberus", "sc_foundation"]
+ignore_missing_imports = true
