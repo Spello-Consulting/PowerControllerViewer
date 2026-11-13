@@ -17,7 +17,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "pyyaml>=6.0.2",
     "requests>=2.32.3",
-    "sc-foundation-services>=3.5.0",
+    "sc-foundation-services>=3.6.2",
     "uvicorn[standard]>=0.30.0",
     "wheel>=0.45.1",
 ]
