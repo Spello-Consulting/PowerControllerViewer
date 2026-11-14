@@ -129,6 +129,36 @@ def test_save_notifies_all_subscribers_and_unsubscribe_is_idempotent(
     asyncio.run(scenario())
 
 
+def test_concurrent_saves_for_one_device_leave_a_valid_file(store: Any) -> None:
+    """Overlapping saves for the same device all succeed and leave valid JSON.
+
+    Regression guard for issue #47: the write-to-temp-then-rename in
+    ``_safe_write`` must not collide when several ingest requests for one
+    device arrive together.
+    """
+
+    async def scenario() -> None:
+        payloads = []
+        for i in range(25):
+            payload = state_payload()
+            payload["SchemaVersion"] = i + 1
+            payloads.append(payload)
+        results = await asyncio.gather(
+            *(store.save_and_update(p) for p in payloads)
+        )
+        assert len(results) == len(payloads)
+
+    asyncio.run(scenario())
+
+    path = store.state_data_dir / "Test Device.json"
+    saved = json.loads(path.read_text(encoding="utf-8"))
+    assert saved["DeviceName"] == "Test Device"
+    assert saved["SchemaVersion"] == store.get_by_device_name("Test Device")[
+        "SchemaVersion"
+    ]
+    assert not (store.state_data_dir / "Test Device.tmp").exists()
+
+
 def test_external_add_modify_delete_and_unchanged_file(store: Any) -> None:
     """External disk changes update canonical devices and publish deletion events."""
 
