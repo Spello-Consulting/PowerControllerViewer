@@ -9,13 +9,11 @@ on:
         type: choice
         options:
           - sydneyapp
-          - pi-spello
-          - both
 
 jobs:
   deploy-sydneyapp:
     name: Deploy → sydneyapp
-    if: ${{ inputs.environment == 'sydneyapp' || inputs.environment == 'both' }}
+    if: ${{ inputs.environment == 'sydneyapp' }}
     runs-on: [self-hosted, sydneyapp]
     environment: sydneyapp        # triggers approval gate if configured in GitHub
     steps:
