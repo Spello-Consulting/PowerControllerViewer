@@ -70,8 +70,32 @@ def test_server_launch_settings(
     monkeypatch.setattr(main_module["uvicorn"], "run", run)
     main_module["main"]()
     run.assert_called_once_with(
-        "main:app", host=host, port=port, reload=debug, log_level="warning"
+        "main:app",
+        host=host,
+        port=port,
+        reload=debug,
+        log_level="warning",
+        timeout_graceful_shutdown=main_module["WEB_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT"],
     )
+
+
+def test_server_launch_bounds_graceful_shutdown(
+    main_module: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Shutdown is bounded so an open dashboard WebSocket cannot hang the exit.
+
+    An unbounded graceful shutdown lets uvicorn wait forever on a single SIGTERM
+    while a browser dashboard holds the /ws connection open, so the deployment's
+    service controller is forced to SIGKILL the process ~90s later.
+    """
+    main_module["config"].get.return_value = None
+    run = Mock()
+    monkeypatch.setattr(main_module["uvicorn"], "run", run)
+    main_module["main"]()
+    timeout = run.call_args.kwargs["timeout_graceful_shutdown"]
+    assert isinstance(timeout, int)
+    assert 0 < timeout <= 30
 
 
 def test_lifespan_loads_states_and_cancels_maintenance(

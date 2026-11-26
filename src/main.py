@@ -23,6 +23,11 @@ from websocket_manager import ConnectionManager
 
 DEFAULT_CONFIG_FILE = "config.yaml"
 
+# Bound uvicorn's graceful shutdown. An open dashboard WebSocket (/ws) would
+# otherwise keep uvicorn waiting forever on a single SIGTERM, so the process
+# hangs until the deployment's service controller SIGKILLs it.
+WEB_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT = 5
+
 
 def parse_command_line_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse command line arguments for the application."""
@@ -109,6 +114,7 @@ def main():
         port=port,
         reload=debug,
         log_level="warning",
+        timeout_graceful_shutdown=WEB_SERVER_GRACEFUL_SHUTDOWN_TIMEOUT,
     )
 
 
